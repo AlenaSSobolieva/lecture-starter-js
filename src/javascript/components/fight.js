@@ -46,6 +46,19 @@ export function fight(firstFighter, secondFighter) {
             }
         };
 
+        const handleKeyUp = event => {
+            if (!fightKeyCodes.has(event.code)) return;
+            state.pressedKeys.delete(event.code);
+            state.isBlocking.left = state.pressedKeys.has(controls.PlayerOneBlock);
+            state.isBlocking.right = state.pressedKeys.has(controls.PlayerTwoBlock);
+            if (!isComboPressed(controls.PlayerOneCriticalHitCombination, state.pressedKeys)) {
+                state.critical.left.isComboActive = false;
+            }
+            if (!isComboPressed(controls.PlayerTwoCriticalHitCombination, state.pressedKeys)) {
+                state.critical.right.isComboActive = false;
+            }
+        };
+
         const handleKeyDown = event => {
             if (state.finished || !fightKeyCodes.has(event.code)) return;
             event.preventDefault();
@@ -73,17 +86,35 @@ export function fight(firstFighter, secondFighter) {
             if (state.health.right <= 0) {
                 state.finished = true;
                 window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
                 resolve(firstFighter);
             }
-        };
+            if (
+                isComboPressed(controls.PlayerTwoCriticalHitCombination, state.pressedKeys) &&
+                !state.critical.right.isComboActive &&
+                now >= state.critical.right.cooldownEndsAt
+            ) {
+                state.critical.right.cooldownEndsAt = now + 10000;
+                state.critical.right.isComboActive = true;
+                state.health.left -= secondFighter.attack * 2;
+                updateBar('left', state.health.left, firstFighter.health);
+                if (state.health.left <= 0) {
+                    state.finished = true;
+                    window.removeEventListener('keydown', handleKeyDown);
+                    window.removeEventListener('keyup', handleKeyUp);
+                    resolve(secondFighter);
+                }
+            }
 
-        const handleKeyUp = event => {
-            if (!fightKeyCodes.has(event.code)) return;
-            state.pressedKeys.delete(event.code);
-            state.isBlocking.left = state.pressedKeys.has(controls.PlayerOneBlock);
-            state.isBlocking.right = state.pressedKeys.has(controls.PlayerTwoBlock);
-            if (!isComboPressed(controls.PlayerOneCriticalHitCombination, state.pressedKeys)) {
-                state.critical.left.isComboActive = false;
+            if (event.code === controls.PlayerTwoAttack && !state.isBlocking.right) {
+                state.health.left -= getDamage(secondFighter, firstFighter);
+                updateBar('left', state.health.left, firstFighter.health);
+                if (state.health.left <= 0) {
+                    state.finished = true;
+                    window.removeEventListener('keydown', handleKeyDown);
+                    window.removeEventListener('keyup', handleKeyUp);
+                    resolve(secondFighter);
+                }
             }
         };
 
