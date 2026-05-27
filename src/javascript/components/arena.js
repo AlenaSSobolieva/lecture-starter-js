@@ -102,9 +102,7 @@ function createArena(selectedFighters, onQuit) {
 
 export default async function renderArena(selectedFighters) {
     const root = document.getElementById('root');
-    const fightRef = { cancel: () => {} };
     const onQuit = () => {
-        fightRef.cancel();
         returnToFighterSelection();
     };
     const arena = createArena(selectedFighters, onQuit);
@@ -112,10 +110,7 @@ export default async function renderArena(selectedFighters) {
     root.innerHTML = '';
     root.append(arena);
 
-    const fightPromise = fight(...selectedFighters);
-    fightRef.cancel = fightPromise.cancel;
-
-    const winner = await fightPromise;
+    const winner = await fight(...selectedFighters);
 
     if (winner) {
         showWinnerModal(winner);
