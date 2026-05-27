@@ -21,6 +21,11 @@ export async function fight(firstFighter, secondFighter) {
             right: false
         };
 
+        const critical = {
+            left: { cooldownEndsAt: 0, isComboActive: false },
+            right: { cooldownEndsAt: 0, isComboActive: false }
+        };
+
         const clampHealth = value => (value < 0 ? 0 : value);
 
         const updateBar = (barEl, current, initial) => {
@@ -58,6 +63,18 @@ export async function fight(firstFighter, secondFighter) {
             }
         };
 
+        const applyCriticalDamage = (attacker, defenderSide) => {
+            const damage = 2 * attacker.attack;
+            health[defenderSide] = clampHealth(health[defenderSide] - damage);
+            updateUI();
+
+            if (health[defenderSide] <= 0) {
+                stopFight(attacker);
+            }
+        };
+
+        const isComboPressed = (combo, keys) => combo.every(key => keys.has(key));
+
         const onKeyDown = event => {
             const { code } = event;
             if (pressedKeys.has(code)) {
@@ -65,6 +82,24 @@ export async function fight(firstFighter, secondFighter) {
             }
             pressedKeys.add(code);
             syncBlockState();
+
+            const now = Date.now();
+
+            const isLeftComboPressed = isComboPressed(controls.PlayerOneCriticalHitCombination, pressedKeys);
+            if (isLeftComboPressed && !critical.left.isComboActive && now >= critical.left.cooldownEndsAt) {
+                critical.left.cooldownEndsAt = now + 10_000;
+                critical.left.isComboActive = true;
+                applyCriticalDamage(firstFighter, 'right'); // ignores block
+                return;
+            }
+
+            const isRightComboPressed = isComboPressed(controls.PlayerTwoCriticalHitCombination, pressedKeys);
+            if (isRightComboPressed && !critical.right.isComboActive && now >= critical.right.cooldownEndsAt) {
+                critical.right.cooldownEndsAt = now + 10_000;
+                critical.right.isComboActive = true;
+                applyCriticalDamage(secondFighter, 'left'); // ignores block
+                return;
+            }
 
             if (code === controls.PlayerOneAttack && !isBlocking.left) {
                 applyDamage(firstFighter, secondFighter, 'right');
@@ -78,6 +113,13 @@ export async function fight(firstFighter, secondFighter) {
         const onKeyUp = event => {
             pressedKeys.delete(event.code);
             syncBlockState();
+
+            if (!isComboPressed(controls.PlayerOneCriticalHitCombination, pressedKeys)) {
+                critical.left.isComboActive = false;
+            }
+            if (!isComboPressed(controls.PlayerTwoCriticalHitCombination, pressedKeys)) {
+                critical.right.isComboActive = false;
+            }
         };
 
         updateUI();
