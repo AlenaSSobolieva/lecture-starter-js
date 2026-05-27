@@ -1,4 +1,5 @@
 import createFighters from './components/fightersView';
+import { createFightersSelector } from './components/fighterSelector';
 import fighterService from './services/fightersService';
 
 class App {
@@ -11,7 +12,9 @@ class App {
             App.loadingElement.style.visibility = 'visible';
 
             const fighters = await fighterService.getFighters();
-            const fightersElement = createFighters(fighters);
+            const selectFighter = createFightersSelector();
+
+            const fightersElement = createFighters(fighters, selectFighter);
 
             App.rootElement.appendChild(fightersElement);
         } catch (error) {
