@@ -25,7 +25,12 @@ function startFight(selectedFighters, onFightStart) {
 
 function createVersusBlock(selectedFighters, onFightStart) {
     const canStartFight = selectedFighters.filter(Boolean).length === 2;
-    const onClick = () => startFight(selectedFighters, onFightStart);
+    const onClick = () => {
+        if (!canStartFight) {
+            return;
+        }
+        startFight(selectedFighters, onFightStart);
+    };
     const container = createElement({ tagName: 'div', className: 'preview-container___versus-block' });
     const image = createElement({
         tagName: 'img',
@@ -35,7 +40,8 @@ function createVersusBlock(selectedFighters, onFightStart) {
     const disabledBtn = canStartFight ? '' : 'disabled';
     const fightBtn = createElement({
         tagName: 'button',
-        className: `preview-container___fight-btn ${disabledBtn}`
+        className: `preview-container___fight-btn ${disabledBtn}`,
+        attributes: canStartFight ? {} : { disabled: 'disabled' }
     });
 
     fightBtn.addEventListener('click', onClick, false);
