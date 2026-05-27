@@ -16,6 +16,10 @@ export async function fight(firstFighter, secondFighter) {
         };
 
         const pressedKeys = new Set();
+        const isBlocking = {
+            left: false,
+            right: false
+        };
 
         const clampHealth = value => (value < 0 ? 0 : value);
 
@@ -33,11 +37,9 @@ export async function fight(firstFighter, secondFighter) {
             updateBar(rightHealthBar, health.right, initialHealth.right);
         };
 
-        const isBlocked = (player, keys) => {
-            if (player === 'left') {
-                return keys.has(controls.PlayerOneBlock);
-            }
-            return keys.has(controls.PlayerTwoBlock);
+        const syncBlockState = () => {
+            isBlocking.left = pressedKeys.has(controls.PlayerOneBlock);
+            isBlocking.right = pressedKeys.has(controls.PlayerTwoBlock);
         };
 
         const stopFight = winner => {
@@ -62,18 +64,20 @@ export async function fight(firstFighter, secondFighter) {
                 return;
             }
             pressedKeys.add(code);
+            syncBlockState();
 
-            if (code === controls.PlayerOneAttack && !isBlocked('right', pressedKeys)) {
+            if (code === controls.PlayerOneAttack && !isBlocking.left) {
                 applyDamage(firstFighter, secondFighter, 'right');
             }
 
-            if (code === controls.PlayerTwoAttack && !isBlocked('left', pressedKeys)) {
+            if (code === controls.PlayerTwoAttack && !isBlocking.right) {
                 applyDamage(secondFighter, firstFighter, 'left');
             }
         };
 
         const onKeyUp = event => {
             pressedKeys.delete(event.code);
+            syncBlockState();
         };
 
         updateUI();
