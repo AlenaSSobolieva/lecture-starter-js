@@ -1,5 +1,4 @@
 import createElement from '../helpers/domHelper';
-import { createFightersSelector } from './fighterSelector';
 
 function createImage(fighter) {
     const { source, name } = fighter;
@@ -28,8 +27,7 @@ function createFighter(fighter, selectFighter) {
     return fighterElement;
 }
 
-export default function createFighters(fighters) {
-    const selectFighter = createFightersSelector();
+export default function createFighters(fighters, selectFighter) {
     const container = createElement({ tagName: 'div', className: 'fighters___root' });
     const preview = createElement({ tagName: 'div', className: 'preview-container___root' });
     const fightersList = createElement({ tagName: 'div', className: 'fighters___list' });

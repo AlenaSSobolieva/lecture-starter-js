@@ -1,7 +1,9 @@
 import createElement from '../helpers/domHelper';
-import versusImg from '../../../resources/versus.png';
+import renderArena from './arena';
 import { createFighterPreview } from './fighterPreview';
 import fighterService from '../services/fightersService';
+
+const versusImg = new URL('../../../resources/versus.png', import.meta.url).href;
 
 const fighterDetailsMap = new Map();
 
@@ -19,17 +21,15 @@ export async function getFighterInfo(fighterId) {
     return fighter;
 }
 
-function startFight(selectedFighters, onFightStart) {
-    onFightStart(selectedFighters);
+function startFight(selectedFighters) {
+    renderArena(selectedFighters);
 }
 
-function createVersusBlock(selectedFighters, onFightStart) {
+function createVersusBlock(selectedFighters) {
     const canStartFight = selectedFighters.filter(Boolean).length === 2;
     const onClick = () => {
-        if (!canStartFight) {
-            return;
-        }
-        startFight(selectedFighters, onFightStart);
+        if (!canStartFight) return;
+        startFight(selectedFighters);
     };
     const container = createElement({ tagName: 'div', className: 'preview-container___versus-block' });
     const image = createElement({
@@ -51,18 +51,18 @@ function createVersusBlock(selectedFighters, onFightStart) {
     return container;
 }
 
-function renderSelectedFighters(selectedFighters, onFightStart) {
+function renderSelectedFighters(selectedFighters) {
     const fightersPreview = document.querySelector('.preview-container___root');
     const [playerOne, playerTwo] = selectedFighters;
     const firstPreview = createFighterPreview(playerOne, 'left');
     const secondPreview = createFighterPreview(playerTwo, 'right');
-    const versusBlock = createVersusBlock(selectedFighters, onFightStart);
+    const versusBlock = createVersusBlock(selectedFighters);
 
     fightersPreview.innerHTML = '';
     fightersPreview.append(firstPreview, versusBlock, secondPreview);
 }
 
-export function createFightersSelector(onFightStart) {
+export function createFightersSelector() {
     let selectedFighters = [];
 
     return async (event, fighterId) => {
@@ -80,6 +80,6 @@ export function createFightersSelector(onFightStart) {
             selectedFighters = [playerOne, fighter];
         }
 
-        renderSelectedFighters(selectedFighters, onFightStart);
+        renderSelectedFighters(selectedFighters);
     };
 }
