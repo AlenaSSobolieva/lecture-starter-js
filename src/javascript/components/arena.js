@@ -2,6 +2,8 @@ import createElement from '../helpers/domHelper';
 import { createFighterImage } from './fighterPreview';
 import { fight } from './fight';
 import showWinnerModal from './modal/winner';
+import createFightersView from './fightersView';
+import fighterService from '../services/fightersService';
 
 function createFighter(fighter, position) {
     const imgElement = createFighterImage(fighter);
@@ -52,22 +54,70 @@ function createHealthIndicators(leftFighter, rightFighter) {
     return healthIndicators;
 }
 
-function createArena(selectedFighters) {
+function createQuitButton(onQuit) {
+    const quitBtn = createElement({
+        tagName: 'button',
+        className: 'arena___quit-btn'
+    });
+
+    quitBtn.innerText = 'Quit';
+    quitBtn.addEventListener('click', onQuit, false);
+
+    return quitBtn;
+}
+
+async function returnToFighterSelection() {
+    const root = document.getElementById('root');
+    const fighters = await fighterService.getFighters();
+    const fightersElement = createFightersView(fighters);
+
+    root.innerHTML = '';
+    root.appendChild(fightersElement);
+}
+
+function createControlsHint() {
+    const hint = createElement({ tagName: 'div', className: 'arena___controls-hint' });
+    const title = createElement({ tagName: 'div', className: 'arena___controls-title' });
+    const p1 = createElement({ tagName: 'div', className: 'arena___controls-row' });
+    const p2 = createElement({ tagName: 'div', className: 'arena___controls-row' });
+
+    title.innerText = 'Controls';
+    p1.innerText = 'Player 1: A attack, D block, Q+W+E critical';
+    p2.innerText = 'Player 2: J attack, L block, U+I+O critical';
+
+    hint.append(title, p1, p2);
+    return hint;
+}
+
+function createArena(selectedFighters, onQuit) {
     const arena = createElement({ tagName: 'div', className: 'arena___root' });
     const healthIndicators = createHealthIndicators(...selectedFighters);
     const fighters = createFighters(...selectedFighters);
+    const controlsHint = createControlsHint();
+    const quitBtn = createQuitButton(onQuit);
 
-    arena.append(healthIndicators, fighters);
+    arena.append(healthIndicators, fighters, controlsHint, quitBtn);
     return arena;
 }
 
 export default async function renderArena(selectedFighters) {
     const root = document.getElementById('root');
-    const arena = createArena(selectedFighters);
+    const fightRef = { cancel: () => {} };
+    const onQuit = () => {
+        fightRef.cancel();
+        returnToFighterSelection();
+    };
+    const arena = createArena(selectedFighters, onQuit);
 
     root.innerHTML = '';
     root.append(arena);
 
-    const winner = await fight(...selectedFighters);
-    showWinnerModal(winner);
+    const fightPromise = fight(...selectedFighters);
+    fightRef.cancel = fightPromise.cancel;
+
+    const winner = await fightPromise;
+
+    if (winner) {
+        showWinnerModal(winner);
+    }
 }

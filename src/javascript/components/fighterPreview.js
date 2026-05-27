@@ -1,5 +1,19 @@
 import createElement from '../helpers/domHelper';
 
+export function createFighterImage(fighter) {
+    const { source, name } = fighter;
+    const attributes = {
+        src: source,
+        title: name,
+        alt: name
+    };
+    return createElement({
+        tagName: 'img',
+        className: 'fighter-preview___img',
+        attributes
+    });
+}
+
 export function createFighterPreview(fighter, position) {
     const positionClassName = position === 'right' ? 'fighter-preview___right' : 'fighter-preview___left';
     const fighterElement = createElement({
@@ -8,6 +22,9 @@ export function createFighterPreview(fighter, position) {
     });
 
     if (!fighter) {
+        const placeholder = createElement({ tagName: 'div', className: 'fighter-preview___name' });
+        placeholder.innerText = 'Select fighter';
+        fighterElement.append(placeholder);
         return fighterElement;
     }
 
@@ -27,20 +44,4 @@ export function createFighterPreview(fighter, position) {
     fighterElement.append(image, name, stats);
 
     return fighterElement;
-}
-
-export function createFighterImage(fighter) {
-    const { source, name } = fighter;
-    const attributes = {
-        src: source,
-        title: name,
-        alt: name
-    };
-    const imgElement = createElement({
-        tagName: 'img',
-        className: 'fighter-preview___img',
-        attributes
-    });
-
-    return imgElement;
 }
